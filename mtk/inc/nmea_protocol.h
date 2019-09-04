@@ -1,5 +1,5 @@
 /**
- * Copyright @ Goome Technologies Co., Ltd. 2009-2019. All rights reserved.
+ * Copyright @ 深圳市谷米万物科技有限公司. 2009-2019. All rights reserved.
  * File name:        nmea.h
  * Author:           王志华       
  * Version:          1.0
@@ -77,6 +77,7 @@ typedef enum
     NMEA_SENTENCE_VTG = 17,       // 标准NMEA-0183协议VTG语句
     NMEA_SENTENCE_ZDA = 18,       // 标准NMEA-0183协议ZDA语句
     NMEA_SENTENCE_ACCURACY = 19,  // MTK精度语句
+    NMEA_SENTENCE_BDGSV = 20,     // 标准NMEA-0183协议GSV语句
 }NMEASentenceID;
 
 typedef struct 
@@ -103,7 +104,15 @@ typedef struct
 typedef struct 
 {
 	char ver[64];
+	char release_str[12];
+	U32 build_id;
 }NMEASentenceVER;
+
+typedef struct 
+{
+	S32 system_message_type;
+}NMEASentenceStart;
+
 
 //$GNRMC,081347.00,A,2232.51905,N,11357.10992,E,2.353,,190319,,,A,V*12
 typedef struct 
@@ -277,9 +286,18 @@ typedef enum
 	MTK_TTFF_ACK = 257,
 }MTKAckType;
 
+typedef enum
+{
+	MTK_INVALID_CMD = 0,     //Invalid command / packet.
+	MTK_UNSUPPORTED_CMD = 1, //Unsupported command / packet type
+	MTK_ACTION_FAILED = 2,   //Valid command / packet, but action failed
+	MTK_ACTION_SUCCEED = 3,  //Valid command / packet, and action succeeded
+}MTKAckResult;
+
 typedef struct
 {
     MTKAckType ack_type;
+	MTKAckResult ack_result;
 }NMEASentenceMTKACK;
 
 
@@ -316,6 +334,7 @@ bool nmea_parse_vtg(NMEASentenceVTG* p_frame, const char* p_sentence);
 bool nmea_parse_zda(NMEASentenceZDA* p_frame, const char* p_sentence);
 bool nmea_parse_mtk_ack(NMEASentenceMTKACK* p_frame, const char* p_sentence);
 bool nmea_parse_mtk_ver(NMEASentenceVER* p_frame, const char* p_sentence);
+bool nmea_parse_mtk_start(NMEASentenceStart* p_frame, const char* p_sentence);
 bool nmea_parse_td_ack(U16* p_cmd, const char* p_sentence, const U16 len);
 bool nmea_parse_td_ver(NMEASentenceVER* p_frame, const char* p_sentence, const U16 len);
 bool nmea_parse_at_ack(U16* p_cmd, const char* p_sentence, const U16 len);
@@ -361,36 +380,6 @@ bool nmea_creat_mtk_aid_time_sentence(const ST_Time st_time, U8* p_sentence, U8*
  * Others: 	
  */
 bool nmea_creat_mtk_aid_pos_sentence(const float ref_lat, const float ref_lng, U8* p_sentence, U8* p_len);
-
-/**
- * Function:   创建内置（MTK）完全冷启动语句
- * Description:
- * Input:	   p_len:最大长度
- * Output: 	   p_sentence:输出的辅助信息语句;p_len:语句长度
- * Return: 	   true——成功；false——失败
- * Others: 	
- */
-bool nmea_creat_mtk_full_cold_start_sentence(U8* p_sentence, U8* p_len);
-
-/**
- * Function:   创建内置（MTK）高精度模式语句
- * Description:
- * Input:	   enable:是否高精度模式；p_len:最大长度
- * Output: 	   p_sentence:输出的辅助信息语句;p_len:语句长度
- * Return: 	   true——成功；false——失败
- * Others: 	
- */
-bool nmea_creat_high_accuracy_sentence(bool enable,U8* p_sentence, U8* p_len);
-
-/**
- * Function:   创建内置（MTK）设置最小SNR语句
- * Description:
- * Input:	   min_snr:最小信噪比，p_len:最大长度
- * Output: 	   p_sentence:输出的辅助信息语句;p_len:语句长度
- * Return: 	   true——成功；false——失败
- * Others: 	
- */
-bool nmea_creat_set_min_snr_sentence(const U8 min_snr, U8* p_sentence, U8* p_len);
 
 /**
  * Function:   创建内置（MTK）EPO数据语句

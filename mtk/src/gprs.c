@@ -78,7 +78,8 @@ static void gprs_config_apn(void)
     GM_memset(&auto_apn, 0 , sizeof(auto_apn));
     GM_memset(&apnConfig, 0 , sizeof(apnConfig));
     config_service_get(CFG_APN_CHECK, TYPE_BOOL, &auto_check_apn, sizeof(auto_check_apn));
-    
+
+    LOG(INFO,"gprs_config_apn auto_check_apn(%d).",auto_check_apn);
     if(auto_check_apn)
     {
         // 从sim卡中读出imsi

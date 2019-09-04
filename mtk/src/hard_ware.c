@@ -1,5 +1,5 @@
 /**
- * Copyright @ Goome Technologies Co., Ltd. 2009-2019. All rights reserved.
+ * Copyright @ 深圳市谷米万物科技有限公司. 2009-2019. All rights reserved.
  * File name:        hard_ware.h
  * Author:           王志华       
  * Version:          1.0
@@ -271,7 +271,16 @@ void upload_boot_log(void)
 	
 	//json_add_string(p_log_root, "app build time", SW_APP_BUILD_DATE_TIME);
 
-    app_check_sum = update_filemod_get_checksum(UPDATE_TARGET_IMAGE);
+    //lz modified for only save at most 2 copies. 
+    // master/minor both exist , use master
+    if (GM_FS_CheckFile(UPDATE_TARGET_IMAGE) >= 0)
+    {
+        app_check_sum = update_filemod_get_checksum(UPDATE_TARGET_IMAGE);
+    }
+    else  // UPDATE_MINOR_IMAGE 肯定存在, 否则不可能运行
+    {
+        app_check_sum = update_filemod_get_checksum(UPDATE_MINOR_IMAGE);
+    }
 	GM_snprintf(check_sum_str, 8, "%4X", app_check_sum);
 
 	system_state_set_bin_checksum(app_check_sum);

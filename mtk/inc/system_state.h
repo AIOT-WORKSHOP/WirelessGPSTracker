@@ -1,5 +1,5 @@
 /**
- * Copyright @ Goome Technologies Co., Ltd. 2009-2019. All rights reserved.
+ * Copyright @ 深圳市谷米万物科技有限公司. 2009-2019. All rights reserved.
  * File name:        system_state.h
  * Author:           王志华       
  * Version:          1.0
@@ -320,19 +320,19 @@ bool system_state_get_high_voltage_alarm(void);
 
 GM_ERRCODE system_state_set_high_voltage_alarm(bool state);
 /*bit16——断电报警-------------------
-bit17——电池低电报警-------------------
-bit18——电源电压过低报警
-bit19——震动报警
-bit20——超速报警
-bit21——伪基站报警
-bit22——电源电压过高报警
-bit23——碰撞报警
-bit24——急加速报警
-bit25——急减速报警
-bit26——翻车报警
-bit27——急转弯报警
-bit28——拆动报警
-bit29——车辆移动报警
+  bit17——电池低电报警-------------------
+  bit18——电源电压过低报警
+  bit19——震动报警
+  bit20——超速报警
+  bit21——伪基站报警
+  bit22——电源电压过高报警
+  bit23——碰撞报警
+  bit24——急加速报警
+  bit25——急减速报警
+  bit26——翻车报警
+  bit27——急转弯报警
+  bit28——拆动报警
+  bit29——车辆移动报警
 */
 bool system_state_get_power_off_alarm(void);
 
@@ -410,9 +410,9 @@ U8 system_state_get_extern_battery_voltage_grade(void);
 
 GM_ERRCODE system_state_set_extern_battery_voltage_grade(U8 voltage_grade);
 
-void system_state_set_mileage(U32 mileage);
+void system_state_set_mileage(U64 mileage);
 
-U32 system_state_get_mileage(void);
+U64 system_state_get_mileage(void);
 
 void system_state_set_bin_checksum(U32 check_sum);
 

@@ -1,5 +1,5 @@
 /**
- * Copyright @ Goome Technologies Co., Ltd. 2009-2019. All rights reserved.
+ * Copyright @ 深圳市谷米万物科技有限公司. 2009-2019. All rights reserved.
  * File name:        g_sensor.h
  * Author:           王志华       
  * Version:          1.0
@@ -41,7 +41,7 @@
 #define G_SENSOR_MAX_VALUE 2047
 
 //运动传感器最大量程,需要根据传感器型号进行调整
-#define G_SENSOR_RANGE 16.0
+#define G_SENSOR_RANGE 2.0
 
 //传感器采样频率（每秒次数）
 #define G_SENSOR_SAMPLE_FREQ 100
@@ -75,16 +75,10 @@ typedef enum
 typedef enum
 {
     NO_COLLISION = 0,
-    SLIGHT_COLLISION = 1,
-    NORMAL_COLLISION = 2,
-    SERIOUS_COLLISION = 3
+    SLIGHT_COLLISION = 0x2000,
+    NORMAL_COLLISION = 0x4000,
+    SERIOUS_COLLISION = 0x6000
 }COLLISION_LEVEL;
-
-//最小重力加速度值0.8g
-#define MIN_GRAVITY_VALUE 0.8
-	
-//最大重力加速度值1.2g
-#define MAX_GRAVITY_VALUE 1.2
 	
 //角度变化超过30度认为发生了突变
 #define MIN_ANGLE_RANGE 30

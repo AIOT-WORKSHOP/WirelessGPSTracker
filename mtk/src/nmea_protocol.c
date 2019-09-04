@@ -1,5 +1,5 @@
 /**
- * Copyright @ Goome Technologies Co., Ltd. 2009-2019. All rights reserved.
+ * Copyright @ 深圳市谷米万物科技有限公司. 2009-2019. All rights reserved.
  * File name:        nmea.h
  * Author:           王志华       
  * Version:          1.0
@@ -595,7 +595,7 @@ NMEASentenceID nmea_sentence_id(const char* p_sentence, const U16 len, bool stri
 		{
 			return NMEA_INVALID;
 		}
-		cmd = head_buff[2];;
+		cmd = head_buff[2];
 		if (AT_AID_ACK_CMD == cmd)
 		{
 			return NMEA_SENTENCE_AT_ACK;
@@ -628,65 +628,67 @@ NMEASentenceID nmea_sentence_id(const char* p_sentence, const U16 len, bool stri
     {
         return NMEA_SENTENCE_TXT;
     }
-
-	if (!GM_strcmp(type+2, "INF"))
+	else if (!GM_strcmp(type+2, "INF"))
     {
         return NMEA_SENTENCE_INF;
     }
-
-	if (!GM_strcmp(type, "PMTK011") || !GM_strcmp(type,"PMTK010"))
+	else if (!GM_strcmp(type,"PMTK010"))
     {
         return NMEA_SENTENCE_MTK_START;
     }
-
-	if (!GM_strcmp(type, "PMTK001"))
+	else if (!GM_strcmp(type, "PMTK001"))
     {
         return NMEA_SENTENCE_MTK_ACK;
     }
-
-	if (!GM_strcmp(type, "PMTK705"))
+	else if (!GM_strcmp(type, "PMTK705"))
     {
         return NMEA_SENTENCE_MTK_VER;
     }
-
-    if (!GM_strcmp(type+2, "RMC"))
+    else if (!GM_strcmp(type+2, "RMC"))
     {
         return NMEA_SENTENCE_RMC;
     }
-    if (!GM_strcmp(type+2, "GGA"))
+    else if (!GM_strcmp(type+2, "GGA"))
     {
         return NMEA_SENTENCE_GGA;
     }
-    if (!GM_strcmp(type+2, "GSA"))
+    else if (!GM_strcmp(type+2, "GSA"))
     {
         return NMEA_SENTENCE_GSA;
     }
-    if (!GM_strcmp(type+2, "GLL"))
+    else if (!GM_strcmp(type+2, "GLL"))
     {
         return NMEA_SENTENCE_GLL;
     }
-    if (!GM_strcmp(type+2, "GST"))
+    else if (!GM_strcmp(type+2, "GST"))
     {
         return NMEA_SENTENCE_GST;
     }
-    if (!GM_strcmp(type, "GPGSV"))
+    else if (!GM_strcmp(type, "GPGSV"))
     {
         return NMEA_SENTENCE_GSV;
     }
-    if (!GM_strcmp(type+2, "VTG"))
+    else if (!GM_strcmp(type, "BDGSV"))
+    {
+        return NMEA_SENTENCE_BDGSV;
+    }
+    else if (!GM_strcmp(type+2, "VTG"))
     {
         return NMEA_SENTENCE_VTG;
     }
-    if (!GM_strcmp(type+2, "ZDA"))
+    else if (!GM_strcmp(type+2, "ZDA"))
     {
         return NMEA_SENTENCE_ZDA;
     }
-	if (!GM_strcmp(type+2, "ACCURACY"))
+	else if (!GM_strcmp(type+2, "ACCURACY"))
     {
         return NMEA_SENTENCE_ACCURACY;
     }
-	//LOG(DEBUG,"Unknown type:%s",type);
-    return NMEA_UNKNOWN;
+	else
+	{
+		//LOG(DEBUG,"Unknown type:%s",type);
+	    return NMEA_UNKNOWN;
+	}
 }
 
 static U8 nmea_checksum(const char* p_sentence)
@@ -1094,9 +1096,11 @@ bool nmea_parse_mtk_ack(NMEASentenceMTKACK* p_frame, const char* p_sentence)
 {
 	char type[MAX_TYPE_LEN] = {0};
 	U16 ack_type = 0;
-	if(!nmea_scan(p_sentence, "ti",
+	U16 ack_result = 0;
+	if(!nmea_scan(p_sentence, "ti;i",
           type,
-          &ack_type))
+          &ack_type,
+          &ack_result))
 	{
 		return false;
 	}
@@ -1105,14 +1109,55 @@ bool nmea_parse_mtk_ack(NMEASentenceMTKACK* p_frame, const char* p_sentence)
 		return false;
 	}
 	p_frame->ack_type = (MTKAckType)ack_type;
+	p_frame->ack_result = (MTKAckResult)ack_result;
 	
 	return true;
 }
 
+//$PMTK705,ReleaseStr,Build_ID,Product_Model,(SDK_Version,) *CS<CR><LF>
+//$PMTK705,AXN_5.0,1312,MNL_VER_18092501WCP 05_5.60_25,a175,0*2F
 bool nmea_parse_mtk_ver(NMEASentenceVER* p_frame, const char* p_sentence)
 {
+	char type[MAX_TYPE_LEN] = {0};
+	if(!nmea_scan(p_sentence, "tsis;",
+		  type,
+		  p_frame->release_str,
+		  &p_frame->build_id,
+		  p_frame->ver))
+	{
+		return false;
+	}
+	if (GM_strcmp(type, "PMTK705"))
+	{
+		return false;
+	}	
 	return true;
 }
+
+//$PMTK010,Type*CS<CR><LF>
+//   Type: The system message type.
+//   "0", UNKNOWN
+//   "1", STARTUP
+//   "2", Notification for the host aiding EPO. 
+//   "3", Notification for the transition to Normal mode completes successfully.
+//[Example]
+//   $PMTK010,001*2E<CR><LF>
+bool nmea_parse_mtk_start(NMEASentenceStart* p_frame, const char* p_sentence)
+{
+	char type[MAX_TYPE_LEN] = {0};
+	if(!nmea_scan(p_sentence, "ti",
+		  type,
+		  &p_frame->system_message_type))
+	{
+		return false;
+	}
+	if (GM_strcmp(type, "PMTK010"))
+	{
+		return false;
+	}
+	return true;
+}
+
 
 
 bool nmea_parse_td_ack(U16* p_cmd, const char* p_sentence, const U16 len)
@@ -1243,67 +1288,6 @@ bool nmea_creat_mtk_aid_pos_sentence(const float ref_lat, const float ref_lng, U
 		return false;
 	}
 	GM_snprintf(cmd,max_lenth,"PMTK713,%f,%f,0,30000,30000,0,1200,50",ref_lat,ref_lng);
-	nmea_create_common_mtk_sentence(cmd,p_sentence);
-	*p_len = GM_strlen((char*)p_sentence);
-	return true;
-}
-
-bool nmea_creat_mtk_full_cold_start_sentence(U8* p_sentence, U8* p_len)
-{
-	U8 max_lenth = 64;
-	char cmd[64] = {0};
-	if (NULL == p_sentence || NULL == p_len || *p_len < max_lenth)
-	{
-		*p_len = 0;
-		return false;
-	}
-	GM_snprintf(cmd,max_lenth,"PMTK104");
-	nmea_create_common_mtk_sentence(cmd,p_sentence);
-	*p_len = GM_strlen((char*)p_sentence);
-	return true;
-}
-
-bool nmea_creat_high_accuracy_sentence(bool enable,U8* p_sentence, U8* p_len)
-{
-	U8 max_lenth = 64;
-	char cmd[64] = {0};
-	if (NULL == p_sentence || NULL == p_len || *p_len < max_lenth)
-	{
-		*p_len = 0;
-		return false;
-	}
-	GM_snprintf(cmd,max_lenth,"PMTK257,%d",enable);
-	nmea_create_common_mtk_sentence(cmd,p_sentence);
-	*p_len = GM_strlen((char*)p_sentence);
-	return true;
-}
-
-bool nmea_creat_active_interference_cancellation(bool enable,U8* p_sentence, U8* p_len)
-{
-	U8 max_lenth = 64;
-	char cmd[64] = {0};
-	if (NULL == p_sentence || NULL == p_len || *p_len < max_lenth)
-	{
-		*p_len = 0;
-		return false;
-	}
-	GM_snprintf(cmd,max_lenth,"PMTK286,%d",enable);
-	nmea_create_common_mtk_sentence(cmd,p_sentence);
-	*p_len = GM_strlen((char*)p_sentence);
-	return true;
-}
-
-
-bool nmea_creat_set_min_snr_sentence(const U8 min_SNR, U8* p_sentence, U8* p_len)
-{
-	U8 max_lenth = 64;
-	char cmd[64] = {0};
-	if (NULL == p_sentence || NULL == p_len || *p_len < max_lenth)
-	{
-		*p_len = 0;
-		return false;
-	}
-	GM_snprintf(cmd,max_lenth,"PMTK306,%d",min_SNR);
 	nmea_create_common_mtk_sentence(cmd,p_sentence);
 	*p_len = GM_strlen((char*)p_sentence);
 	return true;

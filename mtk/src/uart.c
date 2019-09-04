@@ -1,5 +1,5 @@
 /**
- * Copyright @ Goome Technologies Co., Ltd. 2009-2019. All rights reserved.
+ * Copyright @ 深圳市谷米万物科技有限公司. 2009-2019. All rights reserved.
  * File name:        uart.c
  * Author:           王志华       
  * Version:          1.0
@@ -24,6 +24,7 @@
 	   Modification: 
 
  */
+
 
 #include <time.h>
 #include <gm_stdlib.h>

@@ -1,5 +1,5 @@
 /**
- * Copyright @ Goome Technologies Co., Ltd. 2009-2019. All rights reserved.
+ * Copyright @ 深圳市谷米万物科技有限公司. 2009-2019. All rights reserved.
  * File name:        gsm.h
  * Author:           李耀轩       
  * Version:          1.0
@@ -108,7 +108,7 @@ GM_ERRCODE gsm_create(void)
 	GM_RegisterCallBack(GM_CB_FAKE_CELL_RECEIVE, (U32)gsm_fake_cell_callback);
     GM_RegisterCallBack(GM_CB_CALL_RECEIVE, (U32)gsm_incomming_call);
 
-	GM_StartTimer(GM_TIMER_GSM_CHECK_SIMCARD, TIM_GEN_1SECOND*5, check_sim_card);
+	GM_StartTimer(GM_TIMER_GSM_CHECK_SIMCARD, TIM_GEN_1SECOND*2, check_sim_card);
 	GM_StartTimer(GM_TIMER_GSM_CHECK_FAKE_CELL_ALARM, TIM_GEN_1SECOND*GM_FAKE_CELL_CHECK_PERIOD, check_fake_cell_alarm_timer_proc);	
 	return GM_SUCCESS;
 }
@@ -198,13 +198,17 @@ GM_ERRCODE gsm_set_imei(U8* p_imei)
 	U8 imei_hex_write[GM_IMEI_HEX_LEN] = {0};
 	U8 imei_hex_read[GM_IMEI_HEX_LEN] = {0};
 	U16 lib_index = 0;
-	S32 imei_len = -1;
+	S32 result = 0;
 	
 	if (!imei_is_valid(p_imei))
 	{
 		LOG(ERROR,"Invalid IMEI:%s",p_imei);
 		return GM_PARAM_ERROR;
 	}
+
+	//写入IMEI号，停止自检启动定时器
+	GM_StopTimer(GM_TIMER_SELF_CHECK_START);
+	auto_test_destroy();
 	
     for (index_string = 0; index_string < GM_IMEI_LEN - 1; index_string += 2)
     {
@@ -217,12 +221,12 @@ GM_ERRCODE gsm_set_imei(U8* p_imei)
 
 
     lib_index = GM_ReadNvramLid(NVRAM_EF_IMEI_IMEISV_LID);
-    GM_ReadWriteNvram(false, lib_index, 1, imei_hex_write, GM_IMEI_HEX_LEN, &imei_len);    
+    GM_ReadWriteNvram(false, lib_index, 1, imei_hex_write, GM_IMEI_HEX_LEN, &result);    
 
 	//写入长度正确,再读出来校验一次
-    if (GM_IMEI_HEX_LEN == imei_len)
+    if (result > 0)
     {
-        GM_ReadWriteNvram(true, lib_index, 1, imei_hex_read, GM_IMEI_HEX_LEN, &imei_len);
+        GM_ReadWriteNvram(true, lib_index, 1, imei_hex_read, GM_IMEI_HEX_LEN, &result);
         if (0 == GM_memcmp(imei_hex_write, imei_hex_read, GM_IMEI_HEX_LEN))
         {
             GM_memcpy(s_gsm.imei, p_imei, GM_IMEI_LEN);
@@ -237,7 +241,7 @@ GM_ERRCODE gsm_set_imei(U8* p_imei)
     }
     else
     {
-    	LOG(ERROR,"error len:%d",imei_len);
+    	LOG(ERROR,"Failed to write IMEI!");
         return GM_SYSTEM_ERROR;
     }
 }
@@ -305,7 +309,6 @@ static void check_sim_card(void)
     {
        s_gsm.sim_is_valid = false;
     }
-    
 	get_gsm_info();
 }
 

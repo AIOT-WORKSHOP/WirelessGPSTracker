@@ -1,5 +1,5 @@
 /**
- * Copyright @ Goome Technologies Co., Ltd. 2009-2019. All rights reserved.
+ * Copyright @ 深圳市谷米万物科技有限公司. 2009-2019. All rights reserved.
  * File name:        system_state.c
  * Author:           王志华       
  * Version:          1.0
@@ -72,8 +72,8 @@ typedef struct
 	//外部电池电压等级
 	U8 extern_battery_voltage_grade;
 
-	//历程（单位:公里）
-	U32 mileage;
+	//里程（单位:米）
+	U64 mileage;
 
 	//当前可执行文件的校验合
 	U32 check_sum;
@@ -337,7 +337,7 @@ static GM_ERRCODE read_state_from_file()
     }
     
     ret = GM_FS_Read(file_handle, (void *)&s_system_state, sizeof(s_system_state), &file_len);
-    if (ret < 0)
+    if (ret < 0 || file_len != sizeof(s_system_state))
     {
         LOG(ERROR,"Failed to read system state file[%d]", ret);
 		init_para();
@@ -346,23 +346,21 @@ static GM_ERRCODE read_state_from_file()
     }
     
     GM_FS_Close(file_handle);
-    
-    
-    crc = applied_math_calc_common_crc16((U8*)&s_system_state.status_bits, s_system_state.data_len);
-    
-    
+        
     if (s_system_state.magic != MAGIC_NUMBER)
     {
-        LOG(ERROR,"magic error:%x, ", s_system_state.magic);
+        LOG(ERROR,"magic error:%x", s_system_state.magic);
 		init_para();
-        return GM_SYSTEM_ERROR;
+		return save_state_to_file();
     }
-    
+
+    crc = applied_math_calc_common_crc16((u8*)&s_system_state.status_bits, (sizeof(s_system_state) - 8));
     if (s_system_state.crc != crc)
     {
-        LOG(ERROR,"crc error:%x, %x", s_system_state.crc, crc);
+    	LOG(ERROR,"crc error:%X,%X", s_system_state.crc,crc);
+		LOG_HEX((char*)&s_system_state, sizeof(s_system_state));
 		init_para();
-        return GM_SYSTEM_ERROR;
+		return save_state_to_file();
     }
 	return GM_SUCCESS;
 }
@@ -382,11 +380,11 @@ static GM_ERRCODE save_state_to_file(void)
 
     s_system_state.last_good_time = gprs_get_last_good_time();
     s_system_state.call_ok_count = gprs_get_call_ok_count();
-	
-    s_system_state.crc = applied_math_calc_common_crc16((u8*)&s_system_state.status_bits, s_system_state.data_len);
-    
+
+    s_system_state.crc = applied_math_calc_common_crc16((u8*)&s_system_state.status_bits, (sizeof(s_system_state) - 8));
+	    
     ret = GM_FS_Write(file_handle, (void *)&s_system_state, sizeof(s_system_state), &file_len);
-    if (ret < 0)
+    if (ret < 0 || file_len != sizeof(s_system_state))
     {
         LOG(ERROR,"Failed to write system state file[%d]", ret);
         GM_FS_Close(file_handle);
@@ -1012,7 +1010,7 @@ GM_ERRCODE system_state_set_move_alarm(bool state)
 	return save_state_to_file();
 }
 
-void system_state_set_mileage(U32 mileage)
+void system_state_set_mileage(U64 mileage)
 {
 	if (mileage == s_system_state.mileage)
 	{
@@ -1026,7 +1024,7 @@ void system_state_set_mileage(U32 mileage)
 	}
 }
 
-U32 system_state_get_mileage(void)
+U64 system_state_get_mileage(void)
 {
 	return s_system_state.mileage;
 }

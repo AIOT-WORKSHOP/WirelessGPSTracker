@@ -882,7 +882,7 @@ static void config_service_set_factory_deault(void)
     config_service_set(CFG_MIN_SNR, TYPE_BYTE, &value_u8, sizeof(value_u8));
 
 	
-    value_u8 = 30;
+    value_u8 = 9;
     config_service_set(CFG_REOPEN_GSP_TIME, TYPE_BYTE, &value_u8, sizeof(value_u8));
 
     value_u8 = false;

@@ -1295,8 +1295,8 @@ void config_service_set_reming_gps_count(void)
 
 StreamType config_service_update_socket_type(void)
 {
-    return STREAM_TYPE_DGRAM;
-    //return STREAM_TYPE_STREAM;
+    //return STREAM_TYPE_DGRAM;
+    return STREAM_TYPE_STREAM;
 }
 
 StreamType config_service_agps_socket_type(void)
