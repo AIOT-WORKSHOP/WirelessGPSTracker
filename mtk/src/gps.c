@@ -1609,6 +1609,12 @@ static void on_received_rmc(const NMEASentenceRMC rmc)
 	struct tm tm_time = {0};
 	time_t seconds_from_reboot = util_clock();
 
+	if (s_gps.gpsdev_type == GM_GPS_TYPE_MTK_EPO)
+	{
+		on_received_fixed_state(rmc.valid?NMEA_GPGSA_FIX_3D:NMEA_GPGSA_FIX_NONE);
+	}
+
+
 	if (s_gps.state < GM_GPS_FIX_3D)
 	{
 		return;
